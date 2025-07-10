@@ -1,0 +1,36 @@
+
+name: Build ForgeGuard IPA
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Xcode
+      run: sudo xcode-select -s /Applications/Xcode_15.0.app
+
+    - name: Create Xcode Project Workspace
+      run: |
+        mkdir -p ForgeGuard/Assets.xcassets
+        mkdir -p ForgeGuard/Base.lproj
+        touch ForgeGuard/Base.lproj/LaunchScreen.storyboard
+
+    - name: Build IPA
+      run: |
+        xcodebuild -project ForgeGuard.xcodeproj         -scheme ForgeGuard         -configuration Release         -sdk iphoneos         -archivePath ${{ github.workspace }}/ForgeGuard.xcarchive         archive
+
+        xcodebuild -exportArchive         -archivePath ${{ github.workspace }}/ForgeGuard.xcarchive         -exportOptionsPlist ExportOptions.plist         -exportPath ${{ github.workspace }}/build
+
+    - name: Upload IPA Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ForgeGuard.ipa
+        path: build/*.ipa
